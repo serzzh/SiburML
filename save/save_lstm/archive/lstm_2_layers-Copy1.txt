@@ -5,7 +5,7 @@
 
 ---------
 learning_rate:  0.0008
-batch_size:  359
+batch_size:  960
 lstm_layers:  2
 lstm_layer_size:  48
 fc_layer_size:  16 

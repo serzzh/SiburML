@@ -59,7 +59,7 @@ def get_SensorData(files, target_files, read_initial_data = True, min_max_norm =
         #submit_X = data_file.loc[~data_file["timestamp"].isin(target_file["timestamp"])]
    
     
-    return X, target_file, data_file, mean_y, std_y, pca
+    return X, target_file, data_file, mean_y, std_y
 
 
 def my_pca(data, nc = 10):
