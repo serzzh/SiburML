@@ -102,6 +102,11 @@ def batch_generator(x_train, y_train, batch_size, sequence_length, online=False,
 
     # Infinite loop.
     while True:
+        if idx > num_train - batch_size+1:
+            idx = 0
+        #if online is False:
+        #    idx = np.random.randint(num_train - batch_size+1)
+        
         # Allocate a new array for the batch of input-signals.
         x_shape = (batch_size, sequence_length, num_x_sensors)
         x_batch = np.zeros(shape=x_shape, dtype=np.float32)
@@ -115,10 +120,10 @@ def batch_generator(x_train, y_train, batch_size, sequence_length, online=False,
             
             x_batch[i] = x_train[idx+i]
             y_batch[i] = y_train[idx+i]
-            #print(i,idx)
+            
         if online:
             idx = idx + online_shift  # check if its nee to be idx=idx+1
-        # print(idx)
+        #print("num_train %s, idx %s, x_batch.shape %s" % (num_train, idx, x_batch.shape))
         yield (x_batch, y_batch)
 
 def model_summary(learning_rate,batch_size,lstm_layers,lstm_layer_size,fc_layer_size,sequence_length,n_channels,path_checkpoint,spacial_note=''):
