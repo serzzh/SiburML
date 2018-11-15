@@ -10,7 +10,7 @@ import random
 def prepros(sensors, TR_END = "2017-12-31 23:00:00"): # Data preprocessing
         
         #fillna with previous value or mean (if no previous)
-        sensors.ffill(inplace=True)
+        #sensors.ffill(inplace=True)
         sensors.fillna(sensors[:TR_END].mean(), inplace=True)   
         
         #replace negative values with 0
@@ -27,10 +27,12 @@ def get_SensorData(files, target_files, read_initial_data = True, min_max_norm =
 
         
         data_file = pd.read_csv(files, index_col="timestamp", parse_dates=["timestamp"])
+        print("feature shape:", data_file.shape)
         data_file[data_file.columns.values[1:]] = prepros(data_file[data_file.columns.values[1:]])
         
         data_file.columns = column_name
         target_file = pd.read_csv(target_files)
+        print("target length:", target_file.shape)
         
         
         #normalization (only on training data before test dataset!!!)
