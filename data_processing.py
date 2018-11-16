@@ -19,6 +19,31 @@ def prepros(sensors, TR_END = "2017-12-31 23:00:00"): # Data preprocessing
         return sensors
     
 
+def rollavg(sensors, TR_END = "2017-12-31 23:00:00"):
+    features = []
+
+    for period in [12, 24, 48, 168]:
+        rolling_avg = (sensors
+                       .rolling("%iH" % period)
+                       .mean()
+                       .rename(lambda x: "_".join([x, "%ih" % period, "avg"]), axis=1))
+        rolling_std = (sensors
+                       .rolling("%iH" % period)
+                       .std()
+                       .rename(lambda x: "_".join([x, "%ih" % period, "std"]), axis=1))
+        features.append(rolling_avg)
+        features.append(rolling_std)
+        
+    features = pd.concat(features, axis=1)
+    features = sensors.join(features)
+    
+    features["dayofweek"] = features.index.dayofweek
+    features["month"] = features.index.month
+    
+    features.fillna(features[:TR_END].mean(), inplace=True)  
+    
+    return features
+    
 
 def get_SensorData(files, target_files, read_initial_data = True, min_max_norm = False, target='coke', nc=None, norm=True, TR_END = "2017-12-31 23:00:00"):
     column_name = ['f_0', 'f_1', 'f_2', 'f_3', 'f_4', 'f_5', 'f_6', 'f_7', 'f_8', 'f_9', 'f_10', 'f_11', 'f_12', 'f_13', 'f_14', 'f_15', 'f_16', 'f_17', 'f_18', 'f_19', 'f_20', 'f_21', 'f_22', 'f_23', 'f_24', 'f_25', 'f_26', 'f_27', 'f_28', 'f_29', 'f_30', 'f_31', 'f_32', 'f_33', 'f_34', 'f_35', 'f_36', 'f_37', 'f_38', 'f_39', 'f_40', 'f_41', 'f_42', 'f_43', 'f_44', 'f_45', 'f_46', 'f_47']
@@ -53,6 +78,7 @@ def get_SensorData(files, target_files, read_initial_data = True, min_max_norm =
 
         
             data_file.fillna(0, inplace=True)
+            data_file = rollavg(data_file)
             data_file.to_csv('normalized_train_data.csv')
         
             mean_y = target_file.iloc[:, 1].mean()
@@ -65,7 +91,8 @@ def get_SensorData(files, target_files, read_initial_data = True, min_max_norm =
         
         
         colnames = []
-        
+  
+
      
         if nc is not None:
             for i in range(nc):
