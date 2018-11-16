@@ -11,7 +11,7 @@ def prepros(sensors, TR_END = "2017-12-31 23:00:00"): # Data preprocessing
         
         #fillna with previous value or mean (if no previous)
         #sensors.ffill(inplace=True)
-        sensors.fillna(sensors[:TR_END].mean(), inplace=True)   
+        #sensors.fillna(sensors[:TR_END].mean(), inplace=True)   
         
         #replace negative values with 0
         #sensors[sensors<0] = 0
