@@ -6,79 +6,128 @@ from sklearn.decomposition import PCA
 import random
 
 
-def get_SensorData(files, target_files, read_initial_data = True, min_max_norm = False, target='coke', nc=None):
-    column_name = ['timestamp', 'f_0', 'f_1', 'f_2', 'f_3', 'f_4', 'f_5', 'f_6', 'f_7', 'f_8', 'f_9', 'f_10', 'f_11', 'f_12', 'f_13', 'f_14', 'f_15', 'f_16', 'f_17', 'f_18', 'f_19', 'f_20', 'f_21', 'f_22', 'f_23', 'f_24', 'f_25', 'f_26', 'f_27', 'f_28', 'f_29', 'f_30', 'f_31', 'f_32', 'f_33', 'f_34', 'f_35', 'f_36', 'f_37', 'f_38', 'f_39', 'f_40', 'f_41', 'f_42', 'f_43', 'f_44', 'f_45', 'f_46', 'f_47']
+
+def prepros(sensors, TR_END = "2017-12-31 23:00:00"): # Data preprocessing
+        
+        #fillna with previous value or mean (if no previous)
+        #sensors.ffill(inplace=True)
+        #sensors.fillna(sensors[:TR_END].mean(), inplace=True)   
+        
+        #replace negative values with 0
+        #sensors[sensors<0] = 0
+        
+        return sensors
+    
+
+def rollavg(sensors, TR_END = "2017-12-31 23:00:00"):
+    features = []
+
+    for period in [12, 24, 48, 168]:
+        rolling_avg = (sensors
+                       .rolling("%iH" % period)
+                       .mean()
+                       .rename(lambda x: "_".join([x, "%ih" % period, "avg"]), axis=1))
+        rolling_std = (sensors
+                       .rolling("%iH" % period)
+                       .std()
+                       .rename(lambda x: "_".join([x, "%ih" % period, "std"]), axis=1))
+        features.append(rolling_avg)
+        features.append(rolling_std)
+        
+    features = pd.concat(features, axis=1)
+    features = sensors.join(features)
+    
+    features["dayofweek"] = features.index.dayofweek
+    features["month"] = features.index.month
+    
+    features.fillna(features[:TR_END].mean(), inplace=True)  
+    
+    return features
+    
+
+def get_SensorData(files, target_files, read_initial_data = True, min_max_norm = False, target='coke', nc=None, norm=True, TR_END = "2017-12-31 23:00:00"):
+    column_name = ['f_0', 'f_1', 'f_2', 'f_3', 'f_4', 'f_5', 'f_6', 'f_7', 'f_8', 'f_9', 'f_10', 'f_11', 'f_12', 'f_13', 'f_14', 'f_15', 'f_16', 'f_17', 'f_18', 'f_19', 'f_20', 'f_21', 'f_22', 'f_23', 'f_24', 'f_25', 'f_26', 'f_27', 'f_28', 'f_29', 'f_30', 'f_31', 'f_32', 'f_33', 'f_34', 'f_35', 'f_36', 'f_37', 'f_38', 'f_39', 'f_40', 'f_41', 'f_42', 'f_43', 'f_44', 'f_45', 'f_46', 'f_47']
 
     if read_initial_data:  ### Training and test sensor data ###
 
-        data_file = pd.read_csv(files)
+        
+        data_file = pd.read_csv(files, index_col="timestamp", parse_dates=["timestamp"])
+        print("feature shape:", data_file.shape)
+        data_file[data_file.columns.values[1:]] = prepros(data_file[data_file.columns.values[1:]])
+        
         data_file.columns = column_name
         target_file = pd.read_csv(target_files)
-        #target_file.columns = target
+        print("target length:", target_file.shape)
         
-        #### standard normalization ####
-        mean = data_file.iloc[:, 1:len(list(data_file))].mean()
-        std = data_file.iloc[:, 1:len(list(data_file))].std()
-        std.replace(0, 1, inplace=True)
-        #print("std", std)
-        ################################
+        
+        #normalization (only on training data before test dataset!!!)
+        if norm:
+            #### standard normalization ####
+            mean = data_file[:TR_END].mean()
+            std = data_file[:TR_END].std()
+            std.replace(0, 1, inplace=True)
+            #print("std", std)
+            ################################
 
-        if min_max_norm:
-            scaler = MinMaxScaler()
-            data_file.iloc[:, 1:len(list(data_file))] = scaler.fit_transform(data_file.iloc[:, 1:len(list(data_file))])
+            if min_max_norm:
+                scaler = MinMaxScaler()
+                scaler.fit(data_file[:TR_END])
+                data_file = scaler.transform(data_file)
+            else:
+                data_file = (data_file - mean) / std
+
+        
+            data_file.fillna(0, inplace=True)
+            data_file = rollavg(data_file)
+            data_file.to_csv('normalized_train_data.csv')
+        
+            mean_y = target_file.iloc[:, 1].mean()
+            std_y = target_file.iloc[:, 1].std()
+        
+            target_file.iloc[:, 1] = (target_file.iloc[:, 1] - mean_y)/std_y
         else:
-            data_file.iloc[:, 1:len(list(data_file))] = (data_file.iloc[:, 1:len(list(data_file))] - mean) / std
+            mean_y = 0
+            std_y = 1
+        
+        
+        colnames = []
+  
 
-        data_file = data_file.fillna(0)
-        
-        data_file.to_csv('normalized_train_data.csv')
-        
-        mean_y = target_file.iloc[:, 1].mean()
-        std_y = target_file.iloc[:, 1].std()
-        
-        target_file.iloc[:, 1] = (target_file.iloc[:, 1] - mean_y)/std_y
-        
-        # apply PCA
-        
-        colnames = ['timestamp']
-        
      
         if nc is not None:
             for i in range(nc):
                 colnames.append("nc"+str(i))               
-            pca, data = my_pca(data_file.iloc[:,1:len(list(data_file))],nc)
-            data_file = pd.concat([data_file["timestamp"], data], axis=1)
+            pca, data_file = my_pca(data_file,nc)
             data_file.columns = colnames
         else:
-            print (1)
+            print ("No PCA transformation")
         
-        
-        #print(data_file.head())
-        #split into (train+test+validate) and submit datasets
-        X = data_file.loc[data_file["timestamp"].isin(target_file["timestamp"])]
-        #submit_X = data_file.loc[~data_file["timestamp"].isin(target_file["timestamp"])]
-   
-    
+        X = data_file[:TR_END]
+
+      
     return X, target_file, data_file, mean_y, std_y
 
 
 def my_pca(data, nc = 10):
     pca = PCA(n_components=nc)
     dataX = pd.DataFrame(pca.fit_transform(data))
+    dataX.index =  data.index
+    evals = pca.explained_variance_ratio_
+    evals_cs = evals.cumsum()
+    print("Explained variance %s, Cumsum %s" % (evals, evals_cs))
     return pca, dataX
 	
 	
 
-def lstm_sampling (data, y=None, timesteps=250):
+def lstm_sampling (data, y=None, timesteps=48, lag=6):
     # split into samples 
     samples = list()
     targets = list()
     length = timesteps
     n = data.shape[0]
     
-    # step over the 5,000 in jumps of 200
-    for i in range(n-length):
-        # grab from i to i + length
+
+    for i in range(0, n-length, lag):
         sample = data[i:i+length]
         samples.append(sample)
         if y is not None:
