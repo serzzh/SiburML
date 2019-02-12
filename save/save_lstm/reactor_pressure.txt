@@ -1,0 +1,41 @@
+---------
+./save/save_lstm/reactor_pressure.txt
+
+--------- 
+
+---------
+learning_rate:  0.0002
+batch_size:  359
+lstm_layers:  2
+lstm_layer_size:  48
+fc_layer_size:  16 
+
+sequence_length:  48
+n_channels:  20
+--------- 
+
+---------
+Variables: name (type shape) [size]
+--------- 
+
+fc_1/dense/kernel:0 (float32_ref 960x960) [921600, bytes: 3686400]
+fc_1/dense/bias:0 (float32_ref 960) [960, bytes: 3840]
+rnn/multi_rnn_cell/cell_0/lstm_cell/kernel:0 (float32_ref 68x192) [13056, bytes: 52224]
+rnn/multi_rnn_cell/cell_0/lstm_cell/bias:0 (float32_ref 192) [192, bytes: 768]
+rnn/multi_rnn_cell/cell_0/lstm_cell/w_f_diag:0 (float32_ref 48) [48, bytes: 192]
+rnn/multi_rnn_cell/cell_0/lstm_cell/w_i_diag:0 (float32_ref 48) [48, bytes: 192]
+rnn/multi_rnn_cell/cell_0/lstm_cell/w_o_diag:0 (float32_ref 48) [48, bytes: 192]
+rnn/multi_rnn_cell/cell_1/lstm_cell/kernel:0 (float32_ref 96x192) [18432, bytes: 73728]
+rnn/multi_rnn_cell/cell_1/lstm_cell/bias:0 (float32_ref 192) [192, bytes: 768]
+rnn/multi_rnn_cell/cell_1/lstm_cell/w_f_diag:0 (float32_ref 48) [48, bytes: 192]
+rnn/multi_rnn_cell/cell_1/lstm_cell/w_i_diag:0 (float32_ref 48) [48, bytes: 192]
+rnn/multi_rnn_cell/cell_1/lstm_cell/w_o_diag:0 (float32_ref 48) [48, bytes: 192]
+fc_2/dense/kernel:0 (float32_ref 48x16) [768, bytes: 3072]
+fc_2/dense/bias:0 (float32_ref 16) [16, bytes: 64]
+fc_2_2/dense/kernel:0 (float32_ref 16x16) [256, bytes: 1024]
+fc_2_2/dense/bias:0 (float32_ref 16) [16, bytes: 64]
+fc_3_output/dense/kernel:0 (float32_ref 16x1) [16, bytes: 64]
+fc_3_output/dense/bias:0 (float32_ref 1) [1, bytes: 4]
+
+Total size of variables: 955793
+Total bytes of variables: 3823172
