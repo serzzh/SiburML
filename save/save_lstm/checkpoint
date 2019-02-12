@@ -1,2 +1,2 @@
-model_checkpoint_path: "reactor_pressure"
-all_model_checkpoint_paths: "reactor_pressure"
+model_checkpoint_path: "lstm_2_layers"
+all_model_checkpoint_paths: "lstm_2_layers"
